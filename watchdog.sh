@@ -54,7 +54,7 @@ echo
 echo "Установка необходимого софта"
 sleep 2
 echo
-sudo apt-get install watchdog chkconfig
+sudo apt-get install watchdog chkconfig -y
 echonl
 echo "Включаем Сторожевого пса в загрузку"
 echo
