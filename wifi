@@ -1,0 +1,156 @@
+#!/bin/bash
+read -n 1 -p "Ты уверен, что хочешь запустить скрипт, который из Малинки сделает раздатчик wifi (y/[a]): " AMSURE 
+[ "$AMSURE" = "y" ] || exit
+echo "" 1>&2
+sudo apt-get update
+clear
+echo
+echo "                                          @@@@H@@@@@     @@@@9@@@@@@  "
+echo "                                        @H**********h@  @***********@  "                                      
+echo "                                        @@****@******H@@*******9****@ "                                       
+echo "                                         @*******@****@@***9@******@@ "                                       
+echo "                                         @@********@3@@@@@&*******@@ "                                        
+echo "                                           @*******@@@@@@@*******@@  "                                        
+echo "                                            @@@*@@@@@@@@@@@@@**@@    "                                        
+echo "                                            @@   h@       @    @@    "                                        
+echo "                                          @@    @@@        @@    @@  "                                        
+echo "                                          @   @@@@@@@@  @@@@@@@   @  "                                        
+echo "                                          @G@@@      @@@h     A@@ @  "                                        
+echo "                                        @@ @@@        @@         @@ @@"                                        
+echo "                                       @@  @@         @@        @@  B@"                                       
+echo "                                       @   @@        @@@        @@   @"                                       
+echo "                                       @   @@@      @@@@@      h@@   @"                                       
+echo "                                       @@  @@@@@@@@@      @@@@@@@@A @@"                                       
+echo "                                        @@@   @@@@h        @@@@    @@ "                                       
+echo "                                         @      @@         @@       @"                                         
+echo "                                         @@      @         @       @ "                                        
+echo "                                          @      @@@      @@      @@ "                                        
+echo "                                           @@    @@@@@@@@@@@    @@  "                                         
+echo "                                             @@@@@@        @@@@@ "                                            
+echo "                                                @@@       @@@ "                                               
+echo "                                                   @@@@@@@@ "
+echo
+echo -e "Ввдедите название для будущей сети wifi.  Ssid:= \c "
+read ssid
+echo -e "Введите пароль для будущей сети (не мение 8-ми символов): \c "
+read pass
+echo
+# Установка необходимого софта
+echo
+sudo echo "Установка необходимого софта"
+sudo aptitude install hostapd hostap-utils iw bridge-utils
+# Редактируем файл Hostapd
+sudo echo "Редактируем файл Hostapd"
+# Удаляет строчку Даемон-конф
+sudo sed -i "/^DAEMON_CONF=$/d" "/etc/init.d/hostapd"
+# Добавляет 17-ю строчку Даемон-конф
+sudo sed -i '17aDAEMON_CONF=/etc/hostapd/hostapd.conf' /etc/init.d/hostapd
+# Удалим файл /etc/hostapd/hostapd.conf если он есть
+sudo echo "Удалим файл /etc/hostapd/hostapd.conf если он есть"
+sudo rm /etc/hostapd/hostapd.conf
+# Создаем файл /etc/hostapd/hostapd.conf
+sudo echo "Создаем файл /etc/hostapd/hostapd.conf"
+sudo touch /etc/hostapd/hostapd.conf
+# Назначаем права файла /etc/hostapd/hostapd.conf пользователю Пи - иначе не изменяется
+sudo echo "Назначаем права файла /etc/hostapd/hostapd.conf пользователю Пи - иначе не изменяется"
+sudo chmod 777 /etc/hostapd/hostapd.conf
+# Конфигурация Hostapd.conf
+sudo echo "Конфигурация Hostapd.conf"
+sudo echo "ctrl_interface=/var/run/hostapd" >> "/etc/hostapd/hostapd.conf"
+sudo echo "macaddr_acl=0 auth_algs=1" >> "/etc/hostapd/hostapd.conf"
+sudo echo "driver=nl80211" >> "/etc/hostapd/hostapd.conf"
+sudo echo "interface=wlan0" >> "/etc/hostapd/hostapd.conf"
+sudo echo "bridge=br0" >> "/etc/hostapd/hostapd.conf"
+sudo echo "hw_mode=g" >> "/etc/hostapd/hostapd.conf"
+sudo echo "ieee80211n=1" >> "/etc/hostapd/hostapd.conf"
+sudo echo "channel=1" >> "/etc/hostapd/hostapd.conf"
+sudo echo "ssid=$ssid" >> "/etc/hostapd/hostapd.conf"
+sudo echo "macaddr_acl=0" >> "/etc/hostapd/hostapd.conf"
+sudo echo "auth_algs=1" >> "/etc/hostapd/hostapd.conf"
+sudo echo "ignore_broadcast_ssid=0" >> "/etc/hostapd/hostapd.conf"
+sudo echo "wpa=3" >> "/etc/hostapd/hostapd.conf"
+sudo echo "wpa_passphrase=$pass" >> "/etc/hostapd/hostapd.conf"
+sudo echo "wpa_key_mgmt=WPA-PSK" >> "/etc/hostapd/hostapd.conf"
+sudo echo "wpa_pairwise=TKIP" >> "/etc/hostapd/hostapd.conf"
+sudo echo "rsn_pairwise=CCMP" >> "/etc/hostapd/hostapd.conf"
+sudo chmod 644 /etc/hostapd/hostapd.conf
+# Конфигурация моста
+sudo echo "Конфигурация моста"
+# Удалим файл /etc/network/interfaces если он есть
+sudo rm /etc/network/interfaces
+# Создадим файл /etc/network/interfaces
+sudo touch /etc/network/interfaces
+# Назначаем права файла Интерфейсы пользователю Пи - иначе не изменяется
+sudo chmod 777 /etc/network/interfaces
+# Конфигурируем файл Интерфейсы в нетворке
+sudo echo "auto lo" >> "/etc/network/interfaces"
+sudo echo "iface lo inet loopback" >> "/etc/network/interfaces"
+sudo echo "auto br0" >> "/etc/network/interfaces"
+sudo echo "iface br0 inet dhcp" >> "/etc/network/interfaces"
+sudo echo "broadcast 192.168.0.255" >> "/etc/network/interfaces"
+sudo echo "gateway 192.168.0.1 #адрес сетевого шлюза, в моем случае ip роутера" >> "/etc/network/interfaces"
+sudo echo "bridge-ports eth0 wlan0" >> "/etc/network/interfaces"
+sudo echo "You must restart your Pi for changes take effect"
+echo
+echo "                                           iH@@@@@@@@@@@@9."                                                  
+echo "                                      M@@@@@@@@@@@@@@@@@@@@@@@@i "
+echo "                                  2@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@# "                                         
+echo "                               ,#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@M "                                      
+echo "                             2@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ "                                    
+echo "                           i@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ "                                  
+echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@A "                                
+echo "                                                                              "                               
+echo "                SH#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B&. "                     
+echo "            M@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#5                      i##@i "                 
+echo "         :@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@G                              i@# "               
+echo "        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@9                                   @A "   
+echo "      ,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                                      #@ "     
+echo "      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                                        H@ "           
+echo "     @@@@@@@#    r@@@@@@,    @@@@@@@    BG    @@@@@@@@     @@@@@@@@@@@@@@@   @@@@               @& "          
+echo "    &@@@@@@@@     @@@@@@     H@@@@@,    @     s@@@@@@#     @@@@@@@@@@@@@@@  #@@@@G               @  "         
+echo "    @@@@@@@@@A    B@@@@r      @@@@@    G@#    @@@@@@@9     @@@@@@@@@@@@@@#   @@@#                @5 "         
+echo "    @@@@@@@@@@     @@@@       #@@@@    @@@@@@@@@@@@@@i     @@@@@                                 @B "         
+echo "    @@@@@@@@@@G    @@@:   M    @@@.   2@@h    @@@@@@@i     @@@@@             @@@@                @B "         
+echo "    @@@@@@@@@@@    H@@    @    #@@    @@@h    @@@@@@@i     @@@@@#@@@@@@@@    @@@@                @B "         
+echo "    @@@@@@@@@@@3    @S   #@H    @3    @@@h    @@@@@@@i     @@@@@@@@@@@@@@    @@@@                @B "         
+echo "    @@@@@@@@@@@@    @    @@@    @    @@@@h    @@@@@@@i     @@@@@@@@@@@@@@    @@@@                @B "         
+echo "    @@@@@@@@@@@@.       H@@@H        @@@@h    @@@@@@@i     @@@@@             @@@@                @B "         
+echo "    @@@@@@@@@@@@@       @@@@@       #@@@@h    @@@@@@@i     @@@@@             @@@@                @B "         
+echo "    @@@@@@@@@@@@@      h@@@@@h      @@@@@h    @@@@@@@,     @@@@@             @@@@                @9 "         
+echo "    H@@@@@@@@@@@@@     @@@@@@@     H@@@@@h    @@@@@@@      @@@@@             @@@@                @  "         
+echo "     @@@@@@@@@@@@@    h@@@@@@@G    @@@@@@h    @@@@@@M      @@@@@             @@@@               @M "          
+echo "     ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                                           X@ "           
+echo "      G@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@;                                          9@ "            
+echo "       .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@5                                          @@  "            
+echo "         H@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                                          #@    "            
+echo "           :@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@5                                       S@@M    "              
+echo "               h@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@;     "                
+echo "                                                                                          "                   
+echo "                          ,##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@9          "                      
+echo "                            h@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B        "                          
+echo "                              #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#      "                              
+echo "                                &@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&     "                                 
+echo "                                   M@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B       "                                  
+echo "                                      S@@@@@@@@@@@@@@@@@@@@@@@@@:          "                                  
+echo "                                          3M@@@@@@@@@@@@@M2                "                                 
+echo "                                                                            "                                 
+echo "                                                                             "                                
+echo "                                                                              "                               
+echo "                                                                               "                              
+echo "                    @@@@@@@@@@@@@    ;@@@@@@@@@h    i@@@@9     @@@@  M@@@@@@@@@@@B "                          
+echo "                    @@@@@@@@@@@@@   @@@@@@@@@@@@@   i@@@@@@    @@@@  M@@@@@@@@@@@B "                          
+echo "                          M@@@@#   @@@@#     #@@@@. i@@@@@@@   @@@@  M@@@h         "                          
+echo "                         @@@@@:   &@@@@       @@@@@ i@@@@@@@@r @@@@  M@@@@@@@@@@@  "                          
+echo "                       #@@@@#     M@@@h       X@@@@ i@@@@S@@@@#@@@@  M@@@@@@@@@@@  "                          
+echo "                      @@@@@.      9@@@@       @@@@B i@@@@  @@@@@@@@  M@@@G         "                          
+echo "                    M@@@@B         @@@@@A   2@@@@@  i@@@@   #@@@@@@  M@@@h         "                          
+echo "                   B@@@@@@@@@@@@@   @@@@@@@@@@@@#   i@@@@    G@@@@@  M@@@@@@@@@@@@ "                          
+echo "                   B@@@@@@@@@@@@@     A@@@@@@@&     i@@@@      @@@@  #@@@@@@@@@@@@ "
+sudo echo "ssid=\"$ssid\""
+sudo echo "wpa_passphrase=\"$pass\""
+sudo chmod 644 /etc/network/interfaces
+ 
+ 
+#ls -l /etc/network/interfaces
+#-rw-r--r-- 1 root root
+#chmod 644 /etc/network/interfaces
