@@ -1,0 +1,101 @@
+#!/bin/bash
+read -n 1 -p "Ты уверен, что хочешь запустить скрипт, который убирает раздатчик wifi из Малины (y/[a]): " AMSURE 
+[ "$AMSURE" = "y" ] || exit
+echo "" 1>&2
+sudo apt-get update
+#Конфигурация сети по умолчанию
+ssid=cityOS
+pass=0980899418
+wanip=192.168.0.5
+ehtip=192.168.0.6
+clear
+echo
+echo "                                          @@@@H@@@@@     @@@@9@@@@@@  "
+echo "                                        @H**********h@  @***********@  "                                       
+echo "                                        @@****@******H@@*******9****@ "                                        
+echo "                                         @*******@****@@***9@******@@ "                                        
+echo "                                         @@********@3@@@@@&*******@@ "                                         
+echo "                                           @*******@@@@@@@*******@@  "                                         
+echo "                                            @@@*@@@@@@@@@@@@@**@@    "                                         
+echo "                                            @@   h@       @    @@    "                                         
+echo "                                          @@    @@@        @@    @@  "                                         
+echo "                                          @   @@@@@@@@  @@@@@@@   @  "                                         
+echo "                                          @G@@@      @@@h     A@@ @  "                                         
+echo "                                        @@ @@@        @@         @@ @@"                                         
+echo "                                       @@  @@         @@        @@  B@"                                        
+echo "                                       @   @@        @@@        @@   @"                                        
+echo "                                       @   @@@      @@@@@      h@@   @"                                        
+echo "                                       @@  @@@@@@@@@      @@@@@@@@A @@"                                        
+echo "                                        @@@   @@@@h        @@@@    @@ "                                        
+echo "                                         @      @@         @@       @"                                          
+echo "                                         @@      @         @       @ "                                         
+echo "                                          @      @@@      @@      @@ "                                         
+echo "                                           @@    @@@@@@@@@@@    @@  "                                          
+echo "                                             @@@@@@        @@@@@ "                                             
+echo "                                                @@@       @@@ "                                                
+echo "                                                   @@@@@@@@ " 
+echo
+echo "Название Wi-fi сети по-умолчанию \"$ssid\""
+echo -e "Ввдедите название для будущей сети wifi.  Ssid:= \c "
+read ssid
+echo
+echo "Пароль для сети \"$ssid\" по-умолчанию \"$pass\""
+echo -e "Введите пароль для будущей сети (не мение 8-ми символов): \c "
+read pass
+echo
+echo "IP-адресс для Wi-fi адаптера. Для сети \"$ssid\" по-умолчанию \"$wanip\""
+echo -e "Введите IP-адресс для wan0: \c "
+read wanip
+echo
+echo "IP-адресс для Eth0 адаптера. По-умолчанию \"$ehtip\""
+echo -e "Введите IP-адресс для eht0: \c "
+read ethip
+echo 
+# Удаление ненужного софта:
+echo
+sudo echo "Удаление ненужного софта"
+sudo aptitude remove hostapd hostap-utils iw bridge-utils
+# Удалим файл Hostapd
+sudo echo "Удалим файл Hostapd"
+sudo rm /etc/init.d/hostapd
+# Удалим файл /etc/hostapd/hostapd.conf
+sudo echo "Удалим файл /etc/hostapd/hostapd.conf"
+sudo rm /etc/hostapd/hostapd.conf
+# Удалим и создатим файл /etc/network/interfaces для его перенастройки
+sudo rm /etc/network/interfaces
+# Создадим файл /etc/network/interfaces
+sudo touch /etc/network/interfaces
+# Назначаем права файла Интерфейсы пользователю Пи - иначе не изменяется
+sudo chmod 777 /etc/network/interfaces
+# Конфигурируем файл Интерфейсы в нетворке
+sudo echo "auto lo" >> "/etc/network/interfaces"
+echo "Writing into /etc/network/interfaces"
+echo "auto lo"
+sudo echo "#Статический адресс для изернета $ehtip" >> "/etc/network/interfaces"
+sudo echo "#Статический адресс для изернета \"$ehtip\""
+sudo echo "iface lo inet loopback" >> "/etc/network/interfaces"
+echo "iface lo inet loopback"
+sudo echo "iface eth0 inet static" >> "/etc/network/interfaces"
+echo "iface eth0 inet static"
+sudo echo "address $ehtip" >> "/etc/network/interfaces"
+echo "address \"$ehtip\""
+sudo echo "netmask 255.255.255.0" >> "/etc/network/interfaces"
+echo "netmask 255.255.255.0"
+sudo echo "gateway 192.168.0.1" >> "/etc/network/interfaces"
+echo "gateway 192.168.0.1"
+sudo echo " " >> "/etc/network/interfaces"
+echo
+sudo echo "allow-hotplug wlan0" >> "/etc/network/interfaces"
+echo "allow-hotplug wlan0"
+sudo echo "iface wlan0 inet static" >> "/etc/network/interfaces"
+echo "iface wlan0 inet static"
+sudo echo "address $wanip" >> "/etc/network/interfaces"
+echo "address \"$wanip\""
+sudo echo "255.255.255.0" >> "/etc/network/interfaces"
+echo "255.255.255.0"
+sudo echo "gateway 192.168.0.1" >> "/etc/network/interfaces"
+echo "gateway 192.168.0.1"
+sudo echo "wpa-ssid \"$ssid\"" >> "/etc/network/interfaces"
+sudo echo "wpa-psk \"$pass\"" >> "/etc/network/interfaces"
+sudo chmod 644 /etc/network/interfaces
+echo "You must restart your Pi for changes take effect..."
